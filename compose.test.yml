@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  gitlab-ci-pipelines-exporter:
+    image: mvisonneau/gitlab-ci-pipelines-exporter:latest
+    container_name: gitlab-ci-pipelines-exporter
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./gitlab-ci-pipelines-exporter.yml:/etc/config.yml:ro
+      - ./web:/web:ro
+    environment:
+      - GCPE_GITLAB_TOKEN=${GCPE_GITLAB_TOKEN}
+    command: run --config /etc/config.yml
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

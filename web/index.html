@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitLab CI Pipelines Exporter Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fab fa-gitlab"></i> GitLab CI Pipelines Dashboard</h1>
+            <div class="header-info">
+                <span id="connection-status" class="status disconnected">
+                    <i class="fas fa-circle"></i> Disconnected
+                </span>
+                <span id="last-updated">Never</span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="project-filter">
+                    <i class="fas fa-project-diagram"></i> Project Filter:
+                </label>
+                <select id="project-filter" multiple>
+                    <option value="">All Projects</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="branch-filter">
+                    <i class="fas fa-code-branch"></i> Branch Filter:
+                </label>
+                <select id="branch-filter" multiple>
+                    <option value="">All Branches</option>
+                    <option value="main">main</option>
+                    <option value="master">master</option>
+                    <option value="qa">qa</option>
+                    <option value="development">development</option>
+                    <option value="staging">staging</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="status-filter">
+                    <i class="fas fa-filter"></i> Status Filter:
+                </label>
+                <select id="status-filter">
+                    <option value="">All Statuses</option>
+                    <option value="success">Success</option>
+                    <option value="failed">Failed</option>
+                    <option value="running">Running</option>
+                    <option value="pending">Pending</option>
+                    <option value="canceled">Canceled</option>
+                    <option value="skipped">Skipped</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <button id="refresh-btn" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button id="auto-refresh-toggle" class="btn btn-secondary">
+                    <i class="fas fa-play"></i> Auto Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="success-count">0</h3>
+                    <p>Successful</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon failed">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="failed-count">0</h3>
+                    <p>Failed</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon running">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="running-count">0</h3>
+                    <p>Running</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="pending-count">0</h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="pipelines-section">
+                <h2><i class="fas fa-stream"></i> Pipeline Status</h2>
+                <div id="pipelines-container" class="pipelines-grid">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Loading pipelines...
+                    </div>
+                </div>
+            </div>
+
+            <div class="environments-section">
+                <h2><i class="fas fa-server"></i> Environment Status</h2>
+                <div id="environments-container" class="environments-grid">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Loading environments...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-section">
+            <h2><i class="fas fa-chart-bar"></i> Quick Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h4>Pipeline Success Rate</h4>
+                    <div class="metric-value" id="success-rate">--%</div>
+                </div>
+                <div class="metric-card">
+                    <h4>Average Duration</h4>
+                    <div class="metric-value" id="avg-duration">--m</div>
+                </div>
+                <div class="metric-card">
+                    <h4>Total Projects</h4>
+                    <div class="metric-value" id="total-projects">--</div>
+                </div>
+                <div class="metric-card">
+                    <h4>Active Branches</h4>
+                    <div class="metric-value" id="active-branches">--</div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>GitLab CI Pipelines Exporter Dashboard |
+               <a href="/metrics" target="_blank">View Prometheus Metrics</a> |
+               <a href="https://github.com/mvisonneau/gitlab-ci-pipelines-exporter" target="_blank">Documentation</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

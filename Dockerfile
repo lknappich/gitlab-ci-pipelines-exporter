@@ -1,27 +1,48 @@
-##
-# BUILD CONTAINER
-##
+FROM golang:1.21-alpine AS builder
 
-FROM alpine:3.22@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715 as certs
+WORKDIR /app
 
-RUN \
-apk add --no-cache ca-certificates
+# Copy go mod files
+COPY go.mod go.sum ./
 
-##
-# RELEASE CONTAINER
-##
+# Download dependencies
+RUN go mod download
 
-FROM busybox:1.37-glibc@sha256:210ce53959959e79523b8cb0f0bb1cf1c49bf9747cdedb47db1cf0db8e642f61
+# Copy source code
+COPY . .
 
-WORKDIR /
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o gitlab-ci-pipelines-exporter ./cmd/gitlab-ci-pipelines-exporter
 
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY gitlab-ci-pipelines-exporter /usr/local/bin/
+# Final stage
+FROM alpine:latest
 
-# Run as nobody user
-USER 65534
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates wget
 
+WORKDIR /root/
+
+# Copy the binary from builder stage
+COPY --from=builder /app/gitlab-ci-pipelines-exporter .
+
+# Copy web frontend files
+COPY web/ /web/
+
+# Create a simple script to serve both API and frontend
+RUN cat > serve.sh << 'EOF'
+#!/bin/sh
+# Start the exporter in background
+./gitlab-ci-pipelines-exporter run --config /etc/config.yml &
+
+# Simple HTTP server for frontend (if needed)
+# Note: The exporter itself can serve static files if configured
+wait
+EOF
+
+RUN chmod +x serve.sh
+
+# Expose port
 EXPOSE 8080
 
-ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter"]
-CMD ["run"]
+# Default command
+CMD ["./gitlab-ci-pipelines-exporter", "run", "--config", "/etc/config.yml"]
